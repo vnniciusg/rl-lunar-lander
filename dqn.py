@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 
-class DeeQNetwork(nn.Module):
+class DeepQNetwork(nn.Module):
     """
     Deep Q-Network (DQN) for reinforcement learning.
 
@@ -42,7 +42,7 @@ class DeeQNetwork(nn.Module):
     def __init__(
         self,
         lr: float,
-        input_dims: tuple[int],
+        input_dims: tuple[int, int],
         fc1_dims: int,
         fc2_dims: int,
         n_actions: int,
@@ -57,20 +57,20 @@ class DeeQNetwork(nn.Module):
             fc2_dims (int): Number of neurons in the second hidden layer
             n_actions (int): Number of possible actions (output layer size)
         """
-        super().__init__()
+        super(DeepQNetwork, self).__init__()
 
-        self.lr = lr
-        self.input_dims = input_dims
+        self.__lr = lr
 
         # network layers
-        self.fc1 = nn.Linear(*self.input_dims, fc1_dims)
-        self.fc2 = nn.Linear(fc1_dims, fc2_dims)
-        self.fc3 = nn.Linear(fc2_dims, n_actions)
+        self.__fc1 = nn.Linear(input_dims, fc1_dims)
+        self.__fc2 = nn.Linear(fc1_dims, fc2_dims)
+        self.__fc3 = nn.Linear(fc2_dims, n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
 
-        self.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(self.device)
 
     def forward(self, state):
         """
@@ -86,7 +86,7 @@ class DeeQNetwork(nn.Module):
         Returns:
             torch.Tensor: Q-values for all actions, shape (batch_size, n_actions)
         """
-        x = F.relu(self.fc1(state))
-        x = F.relu(self.fc2(x))
+        x = F.relu(self.__fc1(state))
+        x = F.relu(self.__fc2(x))
 
-        return self.fc3(x)
+        return self.__fc3(x)
