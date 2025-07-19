@@ -42,7 +42,7 @@ class DeepQNetwork(nn.Module):
     def __init__(
         self,
         lr: float,
-        input_dims: tuple[int, int],
+        input_dims: tuple[int, ...],
         fc1_dims: int,
         fc2_dims: int,
         n_actions: int,
@@ -52,7 +52,7 @@ class DeepQNetwork(nn.Module):
 
         Args:
             lr (float): Learning rate for the Adam optimizer
-            input_dims (tuple[int]): Dimensions of the input state space
+            input_dims (tuple[int, ...]): Dimensions of the input state space
             fc1_dims (int): Number of neurons in the first hidden layer
             fc2_dims (int): Number of neurons in the second hidden layer
             n_actions (int): Number of possible actions (output layer size)
@@ -62,7 +62,7 @@ class DeepQNetwork(nn.Module):
         self.__lr = lr
 
         # network layers
-        self.__fc1 = nn.Linear(input_dims, fc1_dims)
+        self.__fc1 = nn.Linear(*input_dims, fc1_dims)
         self.__fc2 = nn.Linear(fc1_dims, fc2_dims)
         self.__fc3 = nn.Linear(fc2_dims, n_actions)
 

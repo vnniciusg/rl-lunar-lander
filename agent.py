@@ -51,9 +51,7 @@ class Agent:
     """
 
     def __init__(
-        self,
-        input_dims: tuple[int, int],
-        n_actions: int,
+        self, input_dims: tuple[int, ...], n_actions: int, epsilon: float = 1.0
     ) -> None:
         """
         Initialize the DQN Agent.
@@ -63,8 +61,9 @@ class Agent:
         and set to evaluation mode.
 
         Args:
-            input_dims (tuple[int, int]): Dimensions of the input state space
+            input_dims (tuple[int, ...]): Dimensions of the input state space
             n_actions (int): Number of possible actions in the environment
+            epsilon (float): Initial exploration rate for epsilon-greedy policy default 1.0
         """
         self.__dqn_config = DQNConfig()
 
@@ -86,6 +85,7 @@ class Agent:
         self.q_target_network.eval()
 
         self.__n_actions = n_actions
+        self.epsilon = epsilon
 
     def store_transition(
         self,
@@ -126,7 +126,7 @@ class Agent:
         Returns:
             int: Selected action index (0 to n_actions-1)
         """
-        if np.random.random() < self.__dqn_config.epsilon:
+        if np.random.random() < self.epsilon:
             return np.random.choice(self.__n_actions)
 
         state_tensor = torch.tensor([state], dtype=torch.float).to(
@@ -160,17 +160,23 @@ class Agent:
         batch = random.sample(self.__memory, self.__dqn_config.batch_size)
 
         states, actions, rewards, next_states, dones = zip(*batch)
-        states_tensor = torch.tensor(states, dtype=torch.float32).to(self.q_eval.device)
+        states_tensor = torch.tensor(states, dtype=torch.float32).to(
+            self.q_eval_network.device
+        )
         actions_tensor = (
-            torch.tensor(actions, dtype=torch.int64).unsqueeze(1).to(self.q_eval.device)
+            torch.tensor(actions, dtype=torch.int64)
+            .unsqueeze(1)
+            .to(self.q_eval_network.device)
         )
         rewards_tensor = torch.tensor(rewards, dtype=torch.float32).to(
-            self.q_eval.device
+            self.q_eval_network.device
         )
         next_states_tensor = torch.tensor(next_states, dtype=torch.float32).to(
-            self.q_eval.device
+            self.q_eval_network.device
         )
-        dones_tensor = torch.tensor(dones, dtype=torch.float32).to(self.q_eval.device)
+        dones_tensor = torch.tensor(dones, dtype=torch.float32).to(
+            self.q_eval_network.device
+        )
 
         q_pred = self.q_eval_network(states_tensor).gather(1, actions_tensor).squeeze()
         q_next = self.q_target_network(next_states_tensor).max(dim=1)[0]
@@ -189,7 +195,7 @@ class Agent:
         if self.__learn_step_counter % self.__dqn_config.target_update == 0:
             self.q_target_network.load_state_dict(self.q_eval_network.state_dict())
 
-        self.__dqn_config.epsilon = max(
+        self.epsilon = max(
             self.__dqn_config.eps_min,
-            self.__dqn_config.epsilon * self.__dqn_config.eps_dec,
+            self.epsilon * self.__dqn_config.eps_dec,
         )

@@ -22,7 +22,6 @@ class DQNConfig(BaseModel):
     Attributes:
         lr (float): Learning rate for the neural network optimizer
         gamma (float): Discount factor for future rewards (0 < gamma <= 1)
-        epsilon (float): Initial exploration rate for epsilon-greedy policy
         eps_min (float): Minimum exploration rate (epsilon floor)
         eps_dec (float): Epsilon decay factor applied each step
         mem_size (int): Maximum size of the replay memory buffer
@@ -34,9 +33,6 @@ class DQNConfig(BaseModel):
         default=1e-3, description="Learning rate for the neural network optimizer"
     )
     gamma: float = Field(default=0.99, description="Discount factor for future rewards")
-    epsilon: float = Field(
-        default=1.0, description="Initial exploration rate for epsilon-greedy policy"
-    )
     eps_min: float = Field(
         default=0.01, description="Minimum exploration rate (epsilon floor)"
     )
